@@ -1,0 +1,41 @@
+{
+  "name": "@creditkarma/thrift2md",
+  "version": "0.0.1",
+  "description": "Thrift to Markdown converter",
+  "main": "dist/index.js",
+  "scripts": {
+    "clean": "rimraf coverage/ dist/ node_modules/",
+    "build": "tsc",
+    "lint": "tslint src/**/*",
+    "test": "tsc && lab --coverage --coverage-path ./dist/main --sourcemaps ./dist/test",
+    "test:watch": "watch 'npm test' ./src",
+    "coverage": "lab --coverage --sourcemaps -r console -o stdout -r html -o ./coverage/coverage.html ./dist/test",
+    "release:patch": "npm version patch && npm run release:publish",
+    "release:minor": "npm version minor && npm run release:publish",
+    "release:major": "npm version major && npm run release:publish",
+    "release:publish": "npm publish && git push --follow-tags"
+  },
+  "keywords": [
+    "thrift",
+    "markdown"
+  ],
+  "author": "Nick Nance",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/code": "^4.0.4",
+    "@types/json2md": "^1.5.0",
+    "@types/lab": "^11.1.0",
+    "@types/node": "^8.10.10",
+    "@types/rimraf": "^2.0.2",
+    "@types/thrift": "^0.10.7",
+    "lab": "^15.4.1",
+    "tslint": "^5.9.1",
+    "typescript": "^2.8.3",
+    "watch": "^1.0.2"
+  },
+  "dependencies": {
+    "json2md": "^1.6.1",
+    "rimraf": "^2.6.2",
+    "thrift-parser": "^0.4.2"
+  }
+}
