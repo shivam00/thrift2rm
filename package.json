@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Thrift to Markdown converter",
   "main": "dist/index.js",
+  "bin": "dist/bin/index.js",
   "scripts": {
     "clean": "rimraf coverage/ dist/ node_modules/",
     "build": "tsc",
