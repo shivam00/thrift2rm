@@ -2,12 +2,21 @@ import * as fs from 'fs'
 import * as json2md from 'json2md'
 
 import {
+    ConstDefinition,
+    CppIncludeDefinition,
+    EnumDefinition,
+    ExceptionDefinition,
     FieldDefinition,
+    FunctionDefinition,
     Identifier,
+    IncludeDefinition,
+    NamespaceDefinition,
     parse,
     ServiceDefinition,
     StructDefinition,
     ThriftDocument,
+    TypedefDefinition,
+    UnionDefinition,
 } from '@creditkarma/thrift-parser'
 
 const loadFile = (fileName: string): Promise<string> => {
@@ -34,55 +43,57 @@ const transformField = (fld: FieldDefinition) => {
     }
 }
 
-const transformStructs = (ast: ThriftDocument): any[] => {
+const structFieldRow = (fld: FieldDefinition) => [
+    fld.fieldID ? fld.fieldID.value : '',
+    fld.name.value,
+    transformField(fld),
+    fld.comments.length ? fld.comments[0].value : '',
+    fld.requiredness,
+    fld.defaultValue || '',
+]
 
-    const structures = ast.body
-    .filter((def) => def.type === 'StructDefinition')
-    .map((def: StructDefinition) => [{
-            h2: `Struct: ${def.name.value}`,
-        }, {
-            table: {
-                headers: ['Key', 'Field', 'Type', 'Description', 'Required', 'Default value'],
-                rows: def.fields.map((fld) => [
-                    fld.fieldID ? fld.fieldID.value : '',
-                    fld.name.value,
-                    transformField(fld),
-                    fld.comments.length ? fld.comments[0].value : '',
-                    fld.requiredness,
-                    fld.defaultValue || '',
-                ]),
-            },
-        }],
-    )
+const structDefinitionTable = (def: StructDefinition) => [{
+        h2: `Struct: ${def.name.value}`,
+    }, {
+        table: {
+            headers: ['Key', 'Field', 'Type', 'Description', 'Required', 'Default value'],
+            rows: def.fields.map(structFieldRow),
+        },
+    },
+]
 
-    return [{ h1: 'Data Structures'}, structures]
-}
+const isStructure = (def: StructDefinition) => def.type === 'StructDefinition'
 
-const transformServices = (ast: ThriftDocument): any[] => {
-    const services = ast.body
-        .filter((def) => def.type === 'ServiceDefinition')
-        .map((def: ServiceDefinition) => {
-            const functions = def.functions.map((func) => {
-                const fields = func.fields.reduce((prev, fld) => {
-                    return prev + `${transformField(fld)} ${fld.name.value}, `
-                }, '')
-                const exceptions = func.throws.reduce((prev, fld) => {
-                    return prev + `${transformField(fld)} ${fld.name.value} `
-                }, '')
-                const signature = `${(func.returnType as Identifier).value} ${func.name.value}`
-                return [{
-                    h3: `Function: ${func.name.value}`,
-                }, {
-                    code: {
-                        content: `${signature} (${fields}) throws ${exceptions}`,
-                        language: 'thrift',
-                    },
-                }]
-            })
-            return [{ h2: `Service: ${def.name.value}` }, functions]
-        })
-    return [{ h1: 'Services'}, services]
-}
+const transformStructs = (ast: ThriftDocument): any[] => [
+    { h1: 'Data Structures'}, ast.body.filter(isStructure).map(structDefinitionTable),
+]
+
+const isService = (def: ServiceDefinition) => def.type === 'ServiceDefinition'
+
+const commaList = (fields: FieldDefinition[]) =>
+    fields.reduce((prev, fld) => {
+        return prev + `${transformField(fld)} ${fld.name.value}, `
+    }, '').slice(0, -2)
+
+const funcSignature = (func: FunctionDefinition) =>
+    `${(func.returnType as Identifier).value} ${func.name.value}`
+
+const transformFunction = (func: FunctionDefinition) => [
+    {h3: `Function: ${func.name.value}`}, {
+        code: {
+            content: `${funcSignature(func)} (${commaList(func.fields)}) throws ${commaList(func.throws)}`,
+            language: 'thrift',
+        },
+    },
+]
+
+const serviceDefinitionSection = (def: ServiceDefinition)  => [
+    { h2: `Service: ${def.name.value}` }, def.functions.map(transformFunction),
+]
+
+const transformServices = (ast: ThriftDocument): any[] => [
+    { h1: 'Services'}, ast.body.filter(isService).map(serviceDefinitionSection),
+]
 
 const main = async () => {
     const data = await loadFile('./fixtures/thrift/metadata.thrift')
