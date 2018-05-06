@@ -8,28 +8,31 @@ import {
 } from '@creditkarma/thrift-parser'
 
 import {
+    transformModule,
     transformServices,
     transformStructs,
 } from './transforms'
 
-export function loadFile(fileName: string): Promise<string> {
-    return new Promise((resolve, reject) => {
+export const loadFile = (fileName: string): Promise<string> =>
+    new Promise((resolve, reject) => {
         fs.readFile(fileName, { encoding: 'utf-8' }, (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
+            err ? reject(err) : resolve(data)
         })
     })
-}
 
-export function parseThrift(data: string): Promise<ThriftDocument | ThriftErrors> {
-    return Promise.resolve(parse(data))
-}
+export const writeFile = (fileName: string) => (md: string): Promise<boolean> =>
+    new Promise((resolve, reject) => {
+        fs.writeFile(fileName, md, { encoding: 'utf-8' }, (err) => {
+            err ? reject(err) : resolve(true)
+        })
+    })
 
-export function transformDoc(doc: ThriftDocument): Promise<string> {
+export const parseThrift = (data: string): Promise<ThriftDocument | ThriftErrors> =>
+    Promise.resolve(parse(data))
+
+export const transformDoc = (fileName: string) => (doc: ThriftDocument): Promise<string> => {
     const transform = [].concat(
+        ...transformModule(fileName)(doc),
         ...transformStructs(doc),
         ...transformServices(doc),
     )
