@@ -15,9 +15,11 @@ import {
     UnionDefinition,
 } from '@creditkarma/thrift-parser'
 
+const transformIdenitifier = (fld: Identifier) => `[${fld.value}]`
+
 const transformField = (fld: FieldDefinition) => {
     if (fld.fieldType.type === 'Identifier') {
-        return (fld.fieldType as Identifier).value
+        return transformIdenitifier(fld.fieldType)
     } else if (fld.fieldType.type.indexOf('Keyword') > 0) {
         return fld.fieldType.type.split('Keyword')[0]
     } else if (fld.fieldType.type.indexOf('Identifier') > 0) {
@@ -60,7 +62,7 @@ const commaList = (fields: FieldDefinition[]) =>
     }, '').slice(0, -2)
 
 const funcSignature = (func: FunctionDefinition) =>
-    `${(func.returnType as Identifier).value} ${func.name.value}`
+    `${transformIdenitifier(func.returnType as Identifier)} ${func.name.value}`
 
 const transformFunction = (func: FunctionDefinition) => [
     {h3: `Function: ${func.name.value}`}, {

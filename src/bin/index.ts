@@ -1,3 +1,11 @@
-import {transformFile} from '../index'
+import {
+    loadFile,
+    parseThrift,
+    transformDoc,
+} from '../index'
 
-transformFile('./fixtures/thrift/metadata.thrift')
+loadFile('./fixtures/thrift/metadata.thrift')
+    .then(parseThrift)
+    .then(transformDoc)
+    .then(console.log)
+    .catch(console.error)

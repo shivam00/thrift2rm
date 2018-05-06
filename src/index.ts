@@ -3,6 +3,8 @@ import * as json2md from 'json2md'
 
 import {
     parse,
+    ThriftDocument,
+    ThriftErrors,
 } from '@creditkarma/thrift-parser'
 
 import {
@@ -10,7 +12,7 @@ import {
     transformStructs,
 } from './transforms'
 
-const loadFile = (fileName: string): Promise<string> => {
+export function loadFile(fileName: string): Promise<string> {
     return new Promise((resolve, reject) => {
         fs.readFile(fileName, { encoding: 'utf-8' }, (err, data) => {
             if (err) {
@@ -22,18 +24,16 @@ const loadFile = (fileName: string): Promise<string> => {
     })
 }
 
-export const transformFile = async (fileName: string) => {
-    const data = await loadFile(fileName)
-    const ast = parse(data)
-    if (ast.type === 'ThriftDocument') {
-        const transform = [].concat(
-            ...transformStructs(ast),
-            ...transformServices(ast),
-        )
-        const md = json2md(transform)
-        console.dir(ast, {depth: null})
-        console.log(md)
-    } else {
-        console.dir(ast, {depth: null})
-    }
+export function parseThrift(data: string): Promise<ThriftDocument | ThriftErrors> {
+    return Promise.resolve(parse(data))
+}
+
+export function transformDoc(doc: ThriftDocument): Promise<string> {
+    const transform = [].concat(
+        ...transformStructs(doc),
+        ...transformServices(doc),
+    )
+    const md = json2md(transform)
+    console.dir(doc, {depth: null})
+    return Promise.resolve(md)
 }
