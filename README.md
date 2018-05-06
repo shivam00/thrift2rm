@@ -4,4 +4,4 @@ Tools for managing Thrift IDLs.  This includes a CLI tool for searching and addi
 
 ## Installation
 
-To use the tools to manage [Installation]
+To use the tools to manage [Installation](https://google.com)
