@@ -3,7 +3,7 @@ import {
     parseThrift,
     transformDoc,
     writeFile,
-} from '../index'
+} from '../main/'
 
 const fileName = './fixtures/thrift/metadata.thrift'
 
