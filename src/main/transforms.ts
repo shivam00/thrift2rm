@@ -61,7 +61,7 @@ const structDefinitionTable = (def: StructDefinition) => [{
 const isStructure = (def: StructDefinition) => def.type === 'StructDefinition'
 
 export const transformStructs = (ast: ThriftDocument): any[] => [
-    { h2: 'Data Structures'}, ast.body.filter(isStructure).map(structDefinitionTable),
+    { h2: 'Data Structures'}, ...ast.body.filter(isStructure).map(structDefinitionTable),
 ]
 
 /**
@@ -79,17 +79,17 @@ const funcSignature = (func: FunctionDefinition) =>
     `${transformIdenitifier(func.returnType as Identifier)} ${func.name.value}`
 
 const transformFunction = (func: FunctionDefinition) => [
-    {h4: `Function: ${func.name.value}`}, {
+    { h4: `Function: ${func.name.value}`}, {
         blockquote: `${funcSignature(func)} (${commaList(func.fields)}) throws ${commaList(func.throws)}`,
     },
 ]
 
 const serviceDefinitionSection = (def: ServiceDefinition)  => [
-    { h3: def.name.value }, def.functions.map(transformFunction),
+    { h3: def.name.value }, ...def.functions.map(transformFunction),
 ]
 
 export const transformServices = (ast: ThriftDocument): any[] => [
-    { h2: 'Services'}, ast.body.filter(isService).map(serviceDefinitionSection),
+    { h2: 'Services'}, ...ast.body.filter(isService).map(serviceDefinitionSection),
 ]
 
 /**
