@@ -19,8 +19,13 @@ describe('Transform Thrift Struct', () => {
 
     before(() => {
         struct = transformStructs(parse(`
-            struct MetaException {
-                1: required string message
+            typedef string ItemID
+
+            struct Item {
+                1: required ItemID itemId;
+                2: required i32 version;
+                3: required string name;
+                4: optional string description;
             }
         `) as ThriftDocument)
     })
@@ -41,7 +46,8 @@ describe('Transform Thrift Services', () => {
     before(() => {
         services = transformServices(parse(`
             service MetaService {
-                Metadata echo() throws (1: MetaException ex)
+                Metadata echo(1: string val) throws (1: MetaException ex)
+                void echo(1: string val) throws (1: MetaException ex)
             }
         `) as ThriftDocument)
     })
