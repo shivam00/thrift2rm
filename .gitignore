@@ -2,7 +2,6 @@ node_modules
 npm-debug.log
 dist
 coverage
-thrift
 .vscode
 package-lock.json
 
