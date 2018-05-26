@@ -11,6 +11,7 @@ import {
     transformModule,
     transformServices,
     transformStructs,
+    transformTypeDefs,
 } from './transforms'
 
 export const loadFile = (fileName: string): Promise<string> =>
@@ -33,6 +34,7 @@ export const parseThrift = (data: string): Promise<ThriftDocument | ThriftErrors
 export const transformDoc = (fileName: string) => (doc: ThriftDocument): Promise<string> => {
     const transform = [].concat(
         ...transformModule(fileName)(doc),
+        ...transformTypeDefs(doc),
         ...transformStructs(doc),
         ...transformServices(doc),
     )

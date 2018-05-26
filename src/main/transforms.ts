@@ -62,6 +62,19 @@ const transformField = (fld: SyntaxNode) =>
     )
 
 /**
+ * Type Definitions
+ */
+const typeDefinitionTable = (def: StructDefinition) => [{
+    h3: def.name.value,
+}]
+
+const isTypeDef = (def: PrimarySyntax) => def.type === 'TypedefDefinition'
+
+export const transformTypeDefs = (ast: ThriftDocument): any[] => [
+    { h2: 'Types'}, ...ast.body.filter(isTypeDef).map(typeDefinitionTable),
+]
+
+/**
  * Structure Transformations
  */
 
