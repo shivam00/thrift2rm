@@ -15,6 +15,7 @@ import {
     SyntaxNode,
     SyntaxType,
     ThriftDocument,
+    TypedefDefinition,
     VoidType,
 } from '@creditkarma/thrift-parser'
 
@@ -64,14 +65,16 @@ const transformField = (fld: SyntaxNode) =>
 /**
  * Type Definitions
  */
-const typeDefinitionTable = (def: StructDefinition) => [{
+const typedefDefinitionTable = (def: TypedefDefinition) => [{
     h3: def.name.value,
+}, {
+    blockquote: `${transformField(def.definitionType)} ${def.name.value}`,
 }]
 
 const isTypeDef = (def: PrimarySyntax) => def.type === 'TypedefDefinition'
 
 export const transformTypeDefs = (ast: ThriftDocument): any[] => [
-    { h2: 'Types'}, ...ast.body.filter(isTypeDef).map(typeDefinitionTable),
+    { h2: 'Types'}, ...ast.body.filter(isTypeDef).map(typedefDefinitionTable),
 ]
 
 /**
