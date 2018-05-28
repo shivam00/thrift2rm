@@ -13,6 +13,7 @@ import {
     transformStructs,
     transformTypeDefs,
 } from './transforms'
+import { ThriftMarkdown } from './types';
 
 export const loadFile = (fileName: string): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -31,14 +32,18 @@ export const writeFile = (fileName: string) => (md: string): Promise<boolean> =>
 export const parseThrift = (data: string): Promise<ThriftDocument | ThriftErrors> =>
     Promise.resolve(parse(data))
 
-export const transformDoc = (fileName: string) => (doc: ThriftDocument): Promise<string> => {
-    const transform = [].concat(
-        ...transformModule(fileName)(doc),
-        ...transformTypeDefs(doc),
-        ...transformStructs(doc),
-        ...transformServices(doc),
-    )
-    const md = json2md(transform)
-    console.dir(doc, {depth: null})
-    return Promise.resolve(md)
+export const transformDoc = (fileName: string) => (doc: ThriftDocument | ThriftErrors): Promise<string> => {
+    if (doc.type === 'ThriftDocument') {
+        const transform: ThriftMarkdown = [
+            transformModule(fileName)(doc),
+            transformTypeDefs(doc),
+            transformStructs(doc),
+            transformServices(doc),
+        ]
+        const md = json2md(transform)
+        console.dir(doc, {depth: null})
+        return Promise.resolve(md)
+    } else {
+        return Promise.resolve(doc.type)
+    }
 }

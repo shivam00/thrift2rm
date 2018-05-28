@@ -30,6 +30,25 @@ import {
     VoidType,
 } from '@creditkarma/thrift-parser'
 
+import {
+    FunctionSection,
+    IBlockQuote,
+    IHeaderFour,
+    IHeaderOne,
+    IHeaderThree,
+    IHeaderTwo,
+    ITable,
+    LiteralValue,
+    ModuleSection,
+    ServiceDefintionSection,
+    ServiceSection,
+    StructDefinitionTable,
+    StructFieldRow,
+    StructSection,
+    TypedDefinitionTable,
+    TypeDefSection,
+} from './types'
+
 /**
  * Common Transformations
  */
@@ -62,7 +81,7 @@ function syntaxNodeTransform<U>(
     }
 }
 
-const transformField = (fld: SyntaxNode) =>
+const transformField = (fld: SyntaxNode): string =>
     syntaxNodeTransform(
         fld,
         (e) => `void`,
@@ -92,9 +111,6 @@ function literalTransform<U>(
         default: return e(r)
     }
 }
-
-declare type LiteralValue = StringLiteral | BooleanLiteral | IntegerLiteral | HexLiteral |
-FloatLiteral | ExponentialLiteral
 
 const getLiteralVal = (
     fld: LiteralValue,
@@ -136,7 +152,8 @@ const transformConst = (fld: ConstValue) =>
 /**
  * Type Definitions
  */
-const typedefDefinitionTable = (def: TypedefDefinition) => [{
+
+const typedefDefinitionTable = (def: TypedefDefinition): TypedDefinitionTable => [{
     h3: def.name.value,
 }, {
     blockquote: `${transformField(def.definitionType)} ${def.name.value}`,
@@ -144,16 +161,16 @@ const typedefDefinitionTable = (def: TypedefDefinition) => [{
 
 const isTypeDef = (def: PrimarySyntax) => def.type === 'TypedefDefinition'
 
-export const transformTypeDefs = (ast: ThriftDocument): any[] => [
-    { h2: 'Types'}, ...ast.body.filter(isTypeDef).map(typedefDefinitionTable),
+export const transformTypeDefs = (ast: ThriftDocument): TypeDefSection => [
+    { h2: 'Types'},
+    ast.body.filter(isTypeDef).map((stmt) => typedefDefinitionTable(stmt as TypedefDefinition)),
 ]
 
 /**
  * Structure Transformations
  */
-
-const structFieldRow = (fld: FieldDefinition) => [
-    fld.fieldID ? fld.fieldID.value : '',
+const structFieldRow = (fld: FieldDefinition): StructFieldRow => [
+    fld.fieldID ? fld.fieldID.value : null,
     fld.name.value,
     transformField(fld.fieldType),
     fld.comments.length ? fld.comments[0].value : '',
@@ -161,7 +178,7 @@ const structFieldRow = (fld: FieldDefinition) => [
     fld.defaultValue ? transformConst(fld.defaultValue) : '',
 ]
 
-const structDefinitionTable = (def: StructDefinition) => [{
+const structDefinitionTable = (def: StructDefinition): StructDefinitionTable => [{
         h3: def.name.value,
     }, {
         table: {
@@ -173,16 +190,14 @@ const structDefinitionTable = (def: StructDefinition) => [{
 
 const isStructure = (def: PrimarySyntax) => def.type === 'StructDefinition'
 
-export const transformStructs = (ast: ThriftDocument): any[] => [
-    { h2: 'Data Structures'}, ...ast.body.filter(isStructure).map(structDefinitionTable),
+export const transformStructs = (ast: ThriftDocument): StructSection => [
+    { h2: 'Data Structures' },
+    ast.body.filter(isStructure).map((stmt) => structDefinitionTable(stmt as StructDefinition)),
 ]
 
 /**
  * Service Transformations
  */
-
-const isService = (def: PrimarySyntax) => def.type === 'ServiceDefinition'
-
 const commaList = (fields: FieldDefinition[]) =>
     fields.reduce((prev, fld) => {
         return prev + `${transformField(fld.fieldType)} ${fld.name.value}, `
@@ -191,21 +206,25 @@ const commaList = (fields: FieldDefinition[]) =>
 const funcSignature = (func: FunctionDefinition) =>
     `${transformField(func.returnType)} ${func.name.value}`
 
-const transformFunction = (func: FunctionDefinition) => {
-    const throws = func.throws.length > 0 ? `throws ${commaList(func.throws)}` : ''
-    return [{
-        h4: `Function: ${func.name.value}`,
-    }, {
-        blockquote: `${funcSignature(func)}(${commaList(func.fields)}) ${throws}`,
-    }]
-}
+const funcThrows = (func: FunctionDefinition) =>
+    func.throws.length > 0 ? `throws ${commaList(func.throws)}` : ''
 
-const serviceDefinitionSection = (def: ServiceDefinition)  => [
-    { h3: def.name.value }, ...def.functions.map(transformFunction),
+const transformFunction = (func: FunctionDefinition): FunctionSection => [{
+    h4: `Function: ${func.name.value}`,
+}, {
+    blockquote: `${funcSignature(func)}(${commaList(func.fields)}) ${funcThrows(func)}`,
+}]
+
+const isService = (def: PrimarySyntax) => def.type === 'ServiceDefinition'
+
+const serviceDefinitionSection = (def: ServiceDefinition): ServiceDefintionSection  => [
+    { h3: def.name.value },
+    def.functions.map(transformFunction),
 ]
 
-export const transformServices = (ast: ThriftDocument): any[] => [
-    { h2: 'Services'}, ...ast.body.filter(isService).map(serviceDefinitionSection),
+export const transformServices = (ast: ThriftDocument): ServiceSection => [
+    { h2: 'Services'},
+    ast.body.filter(isService).map((stmt) => serviceDefinitionSection(stmt as ServiceDefinition)),
 ]
 
 /**
@@ -213,15 +232,11 @@ export const transformServices = (ast: ThriftDocument): any[] => [
  */
 const isNamespaceDefinition = (def: PrimarySyntax) => def.type === 'NamespaceDefinition'
 
-export const transformModule = (fileName: string) => (ast: ThriftDocument): any[] => {
-    const results: object[] = [
-        { h1: `${path.parse(fileName).base.split('.')[0]}` },
-    ]
+const namespaceDefinition = (namespace: NamespaceDefinition) => (
+    { blockquote: `${namespace.name.value}` }
+)
 
-    const namespace = (ast.body.find(isNamespaceDefinition) as NamespaceDefinition)
-    if (namespace) {
-        results.push({ blockquote: `${namespace.name.value}` })
-    }
-
-    return results
-}
+export const transformModule = (fileName: string) => (ast: ThriftDocument): ModuleSection => [
+    { h1: `${path.parse(fileName).base.split('.')[0]}` },
+    ast.body.filter(isNamespaceDefinition).map((stmt) => namespaceDefinition(stmt as NamespaceDefinition)),
+]

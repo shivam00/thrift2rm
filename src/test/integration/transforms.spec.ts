@@ -5,7 +5,9 @@ import {
     transformServices,
     transformStructs,
 } from '../../main/transforms'
-
+import {
+    ServiceSection,
+} from '../../main/types'
 export const lab = Lab.script()
 
 const describe = lab.describe
@@ -41,7 +43,7 @@ describe('Transform Thrift Struct', () => {
 })
 
 describe('Transform Thrift Services', () => {
-    let services
+    let services: ServiceSection
 
     before(() => {
         services = transformServices(parse(`
@@ -57,7 +59,7 @@ describe('Transform Thrift Services', () => {
     })
 
     it('should have a h3 object', () => {
-        const serviceDefinition = [].concat(...services).filter((obj) => Object.keys(obj)[0] === 'h3')
+        const serviceDefinition = [services].filter((obj) => Object.keys(obj)[0] === 'h3')
         expect(serviceDefinition.length).to.equal(1)
     })
 
