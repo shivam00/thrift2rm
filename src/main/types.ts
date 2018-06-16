@@ -4,7 +4,12 @@ import {
     FloatLiteral,
     HexLiteral,
     IntegerLiteral,
+    NamespaceDefinition,
+    ServiceDefinition,
     StringLiteral,
+    SyntaxType,
+    ThriftDocument,
+    ThriftStatement,
 } from '@creditkarma/thrift-parser'
 
 /**
@@ -27,6 +32,11 @@ export interface ITable {
  */
 export type LiteralValue = StringLiteral | BooleanLiteral | IntegerLiteral | HexLiteral |
 FloatLiteral | ExponentialLiteral
+
+export type DocSection = NamespaceDefinition | ServiceDefinition
+
+export type SectionType = SyntaxType.NamespaceDefinition | SyntaxType.ServiceDefinition |
+SyntaxType.StructDefinition | SyntaxType.TypedefDefinition
 
 /**
  * Transform Types
@@ -58,3 +68,9 @@ export type StructFieldRow = [
     string | null,
     string
 ]
+
+/**
+ * Thrift Transformations
+ */
+export type SectionFilter = (filter: SectionType) => (stmt: ThriftStatement) => boolean
+export type ModuleTransformation = (fileName: string) => (ast: ThriftDocument) => ModuleSection

@@ -37,7 +37,8 @@ describe('Transform Thrift Struct', () => {
     })
 
     it('should have a md table object', () => {
-        const def = [].concat(...struct).filter((obj) => Object.keys(obj)[0] === 'table')
+        const flattened = [].concat(...struct)
+        const def = (flattened[1] as object[]).filter((obj) => Object.keys(obj)[0] === 'table')
         expect(def.length).to.equal(1)
     })
 })
@@ -59,12 +60,12 @@ describe('Transform Thrift Services', () => {
     })
 
     it('should have a h3 object', () => {
-        const serviceDefinition = [services].filter((obj) => Object.keys(obj)[0] === 'h3')
+        const serviceDefinition = services[1][0].filter((obj) => Object.keys(obj)[0] === 'h3')
         expect(serviceDefinition.length).to.equal(1)
     })
 
     it('should have a h4 funciton object', () => {
-        const serviceFunc = services[1][1].filter((obj) => Object.keys(obj)[0] === 'h4')
+        const serviceFunc = services[1][0][1][0].filter((obj) => Object.keys(obj)[0] === 'h4')
         expect(serviceFunc.length).to.equal(1)
     })
 })
