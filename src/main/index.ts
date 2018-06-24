@@ -35,7 +35,7 @@ export const parseThrift = (data: string): Promise<ThriftDocument | ThriftErrors
 export const transformDoc = (fileName: string) => (doc: ThriftDocument | ThriftErrors): Promise<string> => {
     if (doc.type === 'ThriftDocument') {
         const transform: ThriftMarkdown = [
-            transformModule(fileName)(doc),
+            transformModule(fileName, doc),
             transformTypeDefs(doc),
             transformStructs(doc),
             transformServices(doc),

@@ -98,7 +98,7 @@ const transformField = (fld: SyntaxNode): string =>
     )
 
 function literalTransform<U>(
-    r: StringLiteral | BooleanLiteral | IntegerLiteral | HexLiteral | FloatLiteral | ExponentialLiteral,
+    r: LiteralValue,
     e: (_: StringLiteral) => U,
     f: (_: BooleanLiteral) => U,
     g: (_: IntegerLiteral) => U,
@@ -153,9 +153,8 @@ const transformConst = (fld: ConstValue) => constTransform(
     (z) => `[${z.value}](#${z.value})`,
 )
 
-const isSection: SectionFilter = (filter: SectionType) => (stmt: ThriftStatement) => {
-    return stmt.type === filter
-}
+const isSection = (filter: SectionType, stmt: ThriftStatement) => stmt.type === filter
+const cIsSection = (filter: SectionType) => (stmt: ThriftStatement) => isSection(filter, stmt)
 
 /**
  * Type Definitions
@@ -167,7 +166,7 @@ const typedefDefinitionTable = (def: TypedefDefinition): TypedDefinitionTable =>
 }]
 
 export const transformTypeDefs = (ast: ThriftDocument): TypeDefSection => {
-    const isTypeDef = isSection(SyntaxType.TypedefDefinition)
+    const isTypeDef = cIsSection(SyntaxType.TypedefDefinition)
     return [
         { h2: 'Types'},
         ast.body.filter(isTypeDef).map((stmt) => typedefDefinitionTable(stmt as TypedefDefinition)),
@@ -197,7 +196,7 @@ const structDefinitionTable = (def: StructDefinition): StructDefinitionTable => 
 ]
 
 export const transformStructs = (ast: ThriftDocument): StructSection => {
-    const isStructure = isSection(SyntaxType.StructDefinition)
+    const isStructure = cIsSection(SyntaxType.StructDefinition)
     return [
         { h2: 'Data Structures' },
         ast.body.filter(isStructure).map((stmt) => structDefinitionTable(stmt as StructDefinition)),
@@ -230,7 +229,7 @@ const serviceDefinitionSection = (def: ServiceDefinition): ServiceDefintionSecti
     ]
 
 export const transformServices = (ast: ThriftDocument): ServiceSection => {
-    const isService = isSection(SyntaxType.ServiceDefinition)
+    const isService = cIsSection(SyntaxType.ServiceDefinition)
     return [
         { h2: 'Services'},
         ast.body.filter(isService).map((stmt) => serviceDefinitionSection(stmt as ServiceDefinition)),
@@ -244,8 +243,8 @@ const namespaceDefinition = (namespace: NamespaceDefinition) => (
     { blockquote: `${namespace.name.value}` }
 )
 
-export const transformModule = (fileName: string) => (ast: ThriftDocument): ModuleSection => {
-    const isNamespaceDefinition = isSection(SyntaxType.NamespaceDefinition)
+export const transformModule = (fileName: string, ast: ThriftDocument): ModuleSection => {
+    const isNamespaceDefinition = cIsSection(SyntaxType.NamespaceDefinition)
     return [
         { h1: `${path.parse(fileName).base.split('.')[0]}` },
         ast.body.filter(isNamespaceDefinition).map((stmt) => namespaceDefinition(stmt as NamespaceDefinition)),
